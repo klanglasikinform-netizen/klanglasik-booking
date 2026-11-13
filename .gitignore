@@ -1,0 +1,7 @@
+.DS_Store
+node_modules/
+.firebase/
+*.log
+# ห้ามนำไฟล์สำรองข้อมูลผู้ป่วยขึ้น GitHub
+backup*.json
+*.backup.json

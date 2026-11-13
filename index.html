@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ระบบนัดหมายเลสิก/ICL</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f7fa;--card:#fff;--tx:#17212b;--mu:#5d6b7a;--bd:#d9e1e8;--pr:#0b6fa4;--prt:#fff;--dn:#c0392b;--t1:#0b6fa4;--t2:#2e8b57;--t3:#b8731a;--cl:#e9ecef;--sp:#fff3d6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10171e;--card:#18222c;--tx:#e8eef3;--mu:#97a6b4;--bd:#2c3a47;--pr:#4aa8dc;--prt:#08141c;--dn:#ef7a6c;--t1:#4aa8dc;--t2:#58c08a;--t3:#e5a24f;--cl:#222d38;--sp:#3a3017;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10171e;--card:#18222c;--tx:#e8eef3;--mu:#97a6b4;--bd:#2c3a47;--pr:#4aa8dc;--prt:#08141c;--dn:#ef7a6c;--t1:#4aa8dc;--t2:#58c08a;--t3:#e5a24f;--cl:#222d38;--sp:#3a3017;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 Sarabun,"Noto Sans Thai",Tahoma,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+h1{font-size:18px;margin:0;margin-right:auto}h2{font-size:17px;margin:0 0 8px}
+nav button{background:none;border:0;padding:8px 14px;font:inherit;color:var(--mu);cursor:pointer;border-bottom:3px solid transparent}
+nav button.on{color:var(--pr);border-color:var(--pr);font-weight:700}
+main{max-width:1100px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px}
+button.b,.b{background:var(--pr);color:var(--prt);border:0;border-radius:7px;padding:7px 13px;font:inherit;cursor:pointer}
+.b.g{background:none;color:var(--pr);border:1px solid var(--pr)}.b.d{background:none;color:var(--dn);border:1px solid var(--dn)}.b.s{padding:3px 9px;font-size:14px}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:6px 8px;max-width:100%}
+textarea{width:100%}label{display:block;font-size:14px;color:var(--mu);margin:8px 0 2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 12px}
+.ck{display:inline-flex;gap:4px;align-items:center;margin-right:10px;color:var(--tx);font-size:15px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dh{text-align:center;font-size:13px;color:var(--mu)}
+.day{min-height:92px;border:1px solid var(--bd);border-radius:7px;padding:4px;cursor:pointer;background:var(--bg);overflow:hidden;font-size:12px}
+.day.cl{background:var(--cl);color:var(--mu)}.day.sp{background:var(--sp)}.day.sel{outline:2px solid var(--pr)}.day.out{opacity:.35;pointer-events:none}
+.day b{font-size:14px}.chip{border-left:3px solid;padding-left:4px;margin-top:2px;line-height:1.25}
+.t-am{border-color:var(--t1)}.t-eo{border-color:var(--t2)}.t-ea{border-color:var(--t3)}.full{color:var(--dn);font-weight:700}
+.ap{border:1px solid var(--bd);border-radius:8px;padding:10px;margin-bottom:8px}
+.ap .meta{color:var(--mu);font-size:14px}.tag{display:inline-block;background:var(--cl);border-radius:10px;padding:0 8px;font-size:13px;margin:2px 3px 0 0}
+table{width:100%;border-collapse:collapse}td,th{border-bottom:1px solid var(--bd);padding:6px;text-align:left;font-size:15px}
+.ov{position:fixed;inset:0;background:#0008;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:16px;z-index:20}
+.md{background:var(--card);border-radius:12px;padding:16px;width:100%;max-width:720px}
+.mu{color:var(--mu)}
+@media(max-width:600px){.day{min-height:64px;font-size:10px}.chip{padding-left:2px}}
+</style>
+</head>
+<body>
+<header><h1>🩺 ระบบนัดหมายเลสิก / ICL</h1>
+<button class="b g s" id="lo" style="display:none">ออกจากระบบ</button>
+<nav><button data-act="tab" data-id="book" class="on">สมุดนัดหมาย</button><button data-act="tab" data-id="clo">วันเปิด/ปิดคลินิก</button><button data-act="tab" data-id="doc">ตารางแพทย์</button></nav></header>
+<main id="app"><p class="mu">กำลังโหลดข้อมูล…</p></main>
+<div id="modal"></div>
+<script>
+const T={am:{n:'ตรวจเช้า-ผ่าตัดเย็น',s:'เช้า-ผ่าเย็น',p:'office'},eo:{n:'ตรวจอย่างเดียว (ในเวลาราชการ)',s:'ตรวจ ในเวลา',p:'office'},ea:{n:'ตรวจอย่างเดียว (นอกเวลาราชการ)',s:'ตรวจ นอกเวลา',p:'after'}};
+const P={office:'ในเวลาราชการ (07.30)',after:'นอกเวลาราชการ (14.00)',both:'ทั้งสองช่วง'};
+const DOW=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const MON=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const DIS=['เบาหวาน','ความดัน','ไขมัน','เกาท์','โรคข้อ','G6PD'];
+const S={doctors:[],sessions:[],closures:[],appts:[]};
+let tab='book',cur=new Date(),sel='',q={d:'',p:''},ready=false,db=null;
+cur.setDate(1);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const dt=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const fd=s=>{if(!s)return'';const d=dt(s);return d.getDate()+' '+MON[d.getMonth()]+' '+(d.getFullYear()+543)};
+const uid=()=>'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const docName=id=>(S.doctors.find(d=>d.id===id)||{}).name||'(ไม่พบแพทย์)';
+const save=(c,o)=>db.collection(c).doc(o.id).set(o).catch(e=>alert('บันทึกไม่สำเร็จ: '+(e.message||e)));
+const del=(c,id)=>db.collection(c).doc(id).delete().catch(e=>alert('ลบไม่สำเร็จ: '+(e.message||e)));
+
+// ---- availability ----
+const clo=(date,p)=>S.closures.filter(c=>c.date===date&&(c.period===p||c.period==='both'));
+const isClosed=(date,p)=>clo(date,p).some(c=>c.status==='closed');
+const isSpecial=(date,p)=>clo(date,p).some(c=>c.status==='open');
+function sess(date,t){
+  const p=T[t].p,w0=dt(date).getDay();if(w0===0||(w0===6&&t!=='eo')||isClosed(date,p))return[];
+  const w=dt(date).getDay(),sp=isSpecial(date,p);
+  return S.sessions.filter(s=>s.type===t&&(s.date?s.date===date:(sp||s.dow===w)));
+}
+const booked=(date,t,doc)=>S.appts.filter(a=>a.date===date&&a.type===t&&(!doc||a.doctorId===doc)).length;
+const cap=(date,t)=>sess(date,t).reduce((n,s)=>n+(+s.quota||0),0);
+
+// ---- modal helpers ----
+function modal(title,html,onSave,okText){
+  $('#modal').innerHTML=`<div class="ov"><div class="md"><h2>${esc(title)}</h2>${html}<div class="row" style="margin-top:14px;justify-content:flex-end"><button class="b g" id="mx">ยกเลิก</button>${onSave?`<button class="b" id="mo">${okText||'บันทึก'}</button>`:''}</div></div></div>`;
+  $('#mx').onclick=closeM;
+  if(onSave)$('#mo').onclick=()=>{if(onSave()!==false)closeM()};
+}
+const closeM=()=>{$('#modal').innerHTML='';render()};
+const ask=(msg,fn)=>modal('ยืนยัน',`<p>${esc(msg)}</p>`,()=>{fn()},'ยืนยัน');
+
+// ---- render ----
+function render(){
+  if(!ready)return;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.id===tab));
+  $('#app').innerHTML=tab==='book'?vBook():tab==='clo'?vClo():vDoc();
+  if(tab==='book'){const a=$('#qd'),b=$('#qp');a.value=q.d;b.value=q.p}
+}
+function vBook(){
+  const y=cur.getFullYear(),m=cur.getMonth(),n=new Date(y,m+1,0).getDate(),f=new Date(y,m,1).getDay();
+  let g=DOW.map(d=>`<div class="dh">${d.slice(0,3)}</div>`).join('');
+  for(let i=0;i<f;i++)g+='<div></div>';
+  for(let d=1;d<=n;d++){
+    const ds=ymd(new Date(y,m,d));
+    const chips=Object.keys(T).map(t=>{const c=cap(ds,t);if(!c)return'';const b=booked(ds,t),r=c-b;return`<div class="chip t-${t}">${T[t].s} <span class="${r<=0?'full':''}">${r<=0?'เต็ม':'ว่าง '+r}</span> <span class="mu">(${b}/${c})</span></div>`}).join('');
+    const closed=dt(ds).getDay()===0||(isClosed(ds,'office')&&isClosed(ds,'after'));
+    const sp=isSpecial(ds,'office')||isSpecial(ds,'after');
+    const cn=S.closures.filter(c=>c.date===ds).map(c=>c.note).filter(Boolean)[0]||'';
+    const total=S.appts.filter(a=>a.date===ds).length;
+    g+=`<div class="day${closed?' cl':''}${sp?' sp':''}${sel===ds?' sel':''}" data-act="day" data-id="${ds}"><b>${d}</b>${total?` <span class="tag">นัด ${total}</span>`:''}${closed?'<div>ปิดทำการ</div>':''}${cn?`<div class="mu">${esc(cn)}</div>`:''}${chips}</div>`;
+  }
+  const searching=q.d||q.p;
+  return `<div class="card"><div class="row"><button class="b g" data-act="mo" data-id="-1">◀</button><h2 style="margin:0">${MON[m]} ${y+543}</h2><button class="b g" data-act="mo" data-id="1">▶</button><button class="b g s" data-act="today">วันนี้</button><span style="margin-left:auto"></span><button class="b" data-act="new">+ เพิ่มนัดหมาย</button></div>
+  <div class="row mu" style="margin:8px 0;font-size:13px"><span class="chip t-am">เช้า-ผ่าเย็น</span><span class="chip t-eo">ตรวจ ในเวลา</span><span class="chip t-ea">ตรวจ นอกเวลา</span></div>
+  <div class="cal">${g}</div></div>
+  <div class="card"><h2>ค้นหานัด</h2><div class="row"><label style="margin:0">วันที่นัด <input type="date" id="qd"></label><label style="margin:0">เบอร์ท้าย 4 ตัว <input id="qp" maxlength="4" inputmode="numeric" size="6"></label><button class="b" data-act="search">ค้นหา</button><button class="b g" data-act="clear">ล้าง</button></div></div>
+  <div class="card">${searching?vSearch():vDay()}</div>`;
+}
+function vSearch(){
+  const r=S.appts.filter(a=>(!q.d||a.date===q.d)&&(!q.p||(a.phone||'').endsWith(q.p)||(a.relPhone||'').endsWith(q.p))).sort((a,b)=>a.date.localeCompare(b.date));
+  return `<h2>ผลการค้นหา (${r.length})</h2>`+(r.map(a=>card(a,true)).join('')||'<p class="mu">ไม่พบนัดหมาย</p>');
+}
+function vDay(){
+  if(!sel)return'<p class="mu">เลือกวันที่ในปฏิทินเพื่อดูรายละเอียดและคิว</p>';
+  const d=dt(sel);
+  let h=`<div class="row"><h2 style="margin:0">${DOW[d.getDay()]}ที่ ${fd(sel)}</h2><button class="b s" data-act="new" data-id="${sel}" style="margin-left:auto">+ เพิ่มนัดวันนี้</button></div>`;
+  for(const t of Object.keys(T)){
+    const ss=sess(sel,t),list=S.appts.filter(a=>a.date===sel&&a.type===t);
+    if(!ss.length&&!list.length)continue;
+    h+=`<h3 style="margin:12px 0 4px;font-size:15px">${T[t].n}</h3>`;
+    h+=ss.map(s=>`<div class="mu">• ${esc(docName(s.doctorId))}: จอง ${booked(sel,t,s.doctorId)}/${s.quota}</div>`).join('')||'<div class="mu">ไม่มีแพทย์ออกตรวจ/คลินิกปิด</div>';
+    h+=list.map(a=>card(a,false)).join('');
+  }
+  return h;
+}
+function card(a,full){
+  const ey=k=>{const e=(a.eyes||{})[k]||{};return (e.k||[]).join('/')+(e.v?' '+e.v:'')||'-'};
+  let h=`<div class="ap"><div class="row"><b>${esc(a.name)}</b> <span class="tag">${esc(a.proc||'')}</span><span class="tag">${T[a.type]?.s||''}</span><span style="margin-left:auto"></span><button class="b g s" data-act="edit" data-id="${a.id}">แก้ไข</button><button class="b g s" data-act="move" data-id="${a.id}">เลื่อนนัด</button><button class="b d s" data-act="rm" data-id="${a.id}">ลบ</button></div>
+  <div class="meta">${full?fd(a.date)+' · ':''}โทร ${esc(a.phone)}${a.relPhone?' · ญาติ '+esc(a.relPhone):''} · แพทย์: ${a.reqDoc?esc(docName(a.doctorId)):'ไม่ระบุ'}</div>`;
+  h+=`<div class="meta">อายุ ${esc(a.age)} ปี · น้ำหนัก ${esc(a.weight)} กก. · ${esc(a.prov)}${a.addr?' / '+esc(a.addr):''}</div>
+  <div class="meta">สายตาขวา: ${esc(ey('R'))} · ซ้าย: ${esc(ey('L'))} · คอนแทค: ${a.cl?'ใส่ (งด '+esc(a.clDays||'-')+' วัน)':'ไม่ใส่'}</div>
+  <div class="meta">โรคประจำตัว: ${((a.dis||[]).concat(a.disOther?[a.disOther]:[])).map(esc).join(', ')||'ไม่มี'} · ตั้งครรภ์/ให้นมบุตร: ${a.preg?'ใช่':'ไม่ใช่'}</div>${a.note?`<div class="meta">โน้ต: ${esc(a.note)}</div>`:''}</div>`;
+  return h;
+}
+function vClo(){
+  const rows=[...S.closures].sort((a,b)=>a.date.localeCompare(b.date)).map(c=>`<tr><td>${fd(c.date)}</td><td>${P[c.period]}</td><td>${c.status==='closed'?'ปิด':'เปิดพิเศษ'}</td><td>${esc(c.note)}</td><td><button class="b g s" data-act="cedit" data-id="${c.id}">แก้ไข</button> <button class="b d s" data-act="crm" data-id="${c.id}">ยกเลิก</button></td></tr>`).join('');
+  return `<div class="card"><div class="row"><h2 style="margin:0">วันเปิด/ปิดคลินิก และวันหยุดพิเศษ</h2><button class="b" style="margin-left:auto" data-act="cnew">+ เพิ่ม</button></div><p class="mu">ปกติคลินิกเปิดตามตารางแพทย์ที่ตั้งไว้ รายการที่นี่คือข้อยกเว้น: ปิดเป็นวัน/ช่วง หรือเปิดพิเศษ (นอกตารางปกติ)</p><div style="overflow-x:auto"><table><tr><th>วันที่</th><th>ช่วง</th><th>สถานะ</th><th>หมายเหตุ</th><th></th></tr>${rows||'<tr><td colspan="5" class="mu">ยังไม่มีรายการ</td></tr>'}</table></div></div>`;
+}
+function vDoc(){
+  const dr=S.doctors.map(d=>`<tr><td>${esc(d.name)}</td><td><button class="b g s" data-act="dedit" data-id="${d.id}">แก้ไข</button> <button class="b d s" data-act="drm" data-id="${d.id}">ลบ</button></td></tr>`).join('');
+  const sr=[...S.sessions].sort((a,b)=>(a.date||'').localeCompare(b.date||'')||a.dow-b.dow||a.type.localeCompare(b.type)).map(s=>`<tr><td>${esc(docName(s.doctorId))}</td><td>${s.date?fd(s.date):'ทุกวัน'+DOW[s.dow]}</td><td>${T[s.type].n}</td><td>${s.quota}</td><td><button class="b g s" data-act="sedit" data-id="${s.id}">แก้ไข</button> <button class="b d s" data-act="srm" data-id="${s.id}">ลบ</button></td></tr>`).join('');
+  return `<div class="card"><div class="row"><h2 style="margin:0">รายชื่อแพทย์</h2><button class="b" style="margin-left:auto" data-act="dnew">+ เพิ่มแพทย์</button></div><table>${dr||'<tr><td class="mu">ยังไม่มีแพทย์</td></tr>'}</table></div>
+  <div class="card"><div class="row"><h2 style="margin:0">ตารางออกตรวจ</h2><button class="b" style="margin-left:auto" data-act="snew">+ เพิ่มตาราง</button></div><div style="overflow-x:auto"><table><tr><th>แพทย์</th><th>วัน</th><th>รูปแบบนัด</th><th>จำนวนคิว</th><th></th></tr>${sr||'<tr><td colspan="5" class="mu">ยังไม่มีตาราง</td></tr>'}</table></div></div>`;
+}
+
+// ---- forms ----
+const opts=(arr,v)=>arr.map(([k,l])=>`<option value="${k}"${k===v?' selected':''}>${esc(l)}</option>`).join('');
+const val=id=>$('#'+id).value.trim();
+function eyeF(k,l,e){e=e||{};return`<div><label>ค่าสายตา${l}</label>${['สั้น','ยาว','เอียง','ไม่ทราบค่าสายตา'].map(x=>`<label class="ck"><input type="checkbox" name="e${k}" value="${x}"${(e.k||[]).includes(x)?' checked':''}>${x}</label>`).join('')}<input id="e${k}v" placeholder="ระบุค่า เช่น -5.00 / -1.00 x 180" value="${esc(e.v||'')}" style="width:100%"></div>`}
+function apptForm(a,move){
+  const n=!a;a=a||{date:sel||ymd(new Date()),type:'am',eyes:{},dis:[],proc:'เลสิก'};
+  const docs=S.doctors.map(d=>[d.id,d.name]);
+  modal(move?'เลื่อนนัดหมาย':n?'เพิ่มนัดหมาย':'แก้ไขนัดหมาย',`
+  <div class="grid"><div><label>วันที่นัด</label><input type="date" id="fdate" value="${a.date}"></div>
+  <div><label>รูปแบบการนัดหมาย</label><select id="ftype">${opts(Object.keys(T).map(k=>[k,T[k].n]),a.type)}</select></div>
+  <div><label>ระบุแพทย์/วัน</label><select id="freq"><option value="0">ไม่ระบุ</option><option value="1"${a.reqDoc?' selected':''}>ระบุ</option></select></div>
+  <div><label>แพทย์</label><select id="fdoc">${opts(docs,a.doctorId)}</select></div>
+  <div><label>หัตถการ</label><select id="fproc">${opts([['เลสิก','เลสิก'],['ICL','ICL']],a.proc)}</select></div></div>
+  <div class="grid"><div><label>ชื่อ-นามสกุล *</label><input id="fname" value="${esc(a.name)}" style="width:100%"></div>
+  <div><label>อายุ (ปี)</label><input id="fage" type="number" value="${esc(a.age)}"></div>
+  <div><label>น้ำหนัก (กก.)</label><input id="fwt" type="number" value="${esc(a.weight)}"></div>
+  <div><label>เบอร์โทรผู้ป่วย *</label><input id="fph" inputmode="tel" value="${esc(a.phone)}"></div>
+  <div><label>เบอร์ญาติ</label><input id="frp" inputmode="tel" value="${esc(a.relPhone)}"></div>
+  <div><label>จังหวัด</label><input id="fprov" value="${esc(a.prov)}"></div></div>
+  <label>ที่อยู่</label><input id="faddr" value="${esc(a.addr)}" style="width:100%">
+  <div class="grid">${eyeF('R','ข้างขวา',(a.eyes||{}).R)}${eyeF('L','ข้างซ้าย',(a.eyes||{}).L)}</div>
+  <div class="row"><label>คอนแทคเลนส์</label><select id="fcl"><option value="0">ไม่ใส่</option><option value="1"${a.cl?' selected':''}>ใส่</option></select><span id="fcld">งดมาแล้ว <input id="fcldays" type="number" value="${esc(a.clDays)}" style="width:80px"> วัน</span></div>
+  <label>โรคประจำตัว (ไม่เลือก = ไม่มี)</label>${DIS.map(x=>`<label class="ck"><input type="checkbox" name="dis" value="${x}"${(a.dis||[]).includes(x)?' checked':''}>${x}</label>`).join('')}<input id="fdo" placeholder="อื่นๆ ระบุ" value="${esc(a.disOther)}">
+  <div class="row"><label>ตั้งครรภ์/ให้นมบุตร</label><select id="fpg"><option value="0">ไม่ใช่</option><option value="1"${a.preg?' selected':''}>ใช่</option></select></div>
+  <label>โน้ตเพิ่มเติม</label><textarea id="fnote" rows="2">${esc(a.note)}</textarea>`,()=>{
+    const o={id:a.id||uid(),date:val('fdate'),type:val('ftype'),reqDoc:val('freq')==='1',doctorId:val('freq')==='1'?val('fdoc'):'',proc:val('fproc'),name:val('fname'),age:val('fage'),weight:val('fwt'),phone:val('fph'),relPhone:val('frp'),prov:val('fprov'),addr:val('faddr'),
+      eyes:{R:{k:[...document.querySelectorAll('[name=eR]:checked')].map(x=>x.value),v:val('eRv')},L:{k:[...document.querySelectorAll('[name=eL]:checked')].map(x=>x.value),v:val('eLv')}},
+      cl:val('fcl')==='1',clDays:val('fcl')==='1'?val('fcldays'):'',dis:[...document.querySelectorAll('[name=dis]:checked')].map(x=>x.value),disOther:val('fdo'),preg:val('fpg')==='1',note:val('fnote')};
+    if(!o.name||!o.phone||!o.date){alert('กรุณากรอกวันที่ ชื่อ-นามสกุล และเบอร์โทรผู้ป่วย');return false}
+    const w=dt(o.date).getDay();
+    if(w===0){alert('วันอาทิตย์ปิดทำการ ไม่สามารถนัดหมายได้');return false}
+    if(w===6&&o.type!=='eo'){alert('วันเสาร์นัดได้เฉพาะ "ตรวจอย่างเดียว (ในเวลาราชการ)" เวลา 07.30 เท่านั้น ไม่นัดตรวจเช้า-ผ่าตัดเย็น');return false}
+    const c=cap(o.date,o.type),b=S.appts.filter(x=>x.date===o.date&&x.type===o.type&&x.id!==o.id).length;
+    const go=()=>{save('appts',o);sel=o.date;const d=dt(o.date);cur=new Date(d.getFullYear(),d.getMonth(),1);q={d:'',p:''}};
+    if(c===0||b>=c){const m=c===0?'วันและรูปแบบนี้ไม่มีคิวเปิด':'คิวเต็มแล้ว ('+b+'/'+c+')';setTimeout(()=>ask(m+' ต้องการบันทึกต่อหรือไม่?',go),0);return true}
+    go();
+  });
+  const sync=()=>{$('#fdoc').disabled=$('#freq').value!=='1';$('#fcld').style.display=$('#fcl').value==='1'?'':'none'};
+  $('#freq').onchange=sync;$('#fcl').onchange=sync;sync();
+}
+function simple(title,fields,onOk){modal(title,fields,onOk)}
+function closureForm(c){c=c||{date:sel||ymd(new Date()),period:'both',status:'closed',note:''};
+  simple(c.id?'แก้ไขรายการ':'เพิ่มวันเปิด/ปิด',`<label>วันที่</label><input type="date" id="cd" value="${c.date}"><label>ช่วงเวลา</label><select id="cp">${opts(Object.entries(P),c.period)}</select><label>สถานะ</label><select id="cs">${opts([['closed','ปิดคลินิก / วันหยุดพิเศษ'],['open','เปิดพิเศษ (นอกตารางปกติ)']],c.status)}</select><label>หมายเหตุ</label><input id="cn" value="${esc(c.note)}" style="width:100%">`,()=>{
+    if(!val('cd'))return false;save('closures',{id:c.id||uid(),date:val('cd'),period:val('cp'),status:val('cs'),note:val('cn')})})}
+function docForm(d){simple(d?'แก้ไขแพทย์':'เพิ่มแพทย์',`<label>ชื่อแพทย์</label><input id="dn" value="${esc(d&&d.name)}" style="width:100%">`,()=>{if(!val('dn'))return false;save('doctors',{id:d?d.id:uid(),name:val('dn')})})}
+function sessForm(s){
+  if(!S.doctors.length){alert('กรุณาเพิ่มรายชื่อแพทย์ก่อน');return}
+  s=s||{dow:1,type:'am',quota:5};
+  simple(s.id?'แก้ไขตารางออกตรวจ':'เพิ่มตารางออกตรวจ',`<label>แพทย์</label><select id="sd">${opts(S.doctors.map(d=>[d.id,d.name]),s.doctorId)}</select><label>รูปแบบวันออกตรวจ</label><select id="sm">${opts([['w','ทุกสัปดาห์ (เลือกวัน)'],['d','เฉพาะวันที่ (ระบุวัน)']],s.date?'d':'w')}</select><div id="sww"><label>วันในสัปดาห์</label><select id="sw">${opts(DOW.map((x,i)=>[i,x]),String(s.dow))}</select></div><div id="sdw"><label>วันที่ออกตรวจ</label><input type="date" id="sdt" value="${s.date||''}"></div><label>รูปแบบนัด</label><select id="st">${opts(Object.keys(T).map(k=>[k,T[k].n]),s.type)}</select><label>จำนวนคิวต่อวัน</label><input id="sq" type="number" min="0" value="${s.quota}">`,()=>{const sp=val('sm')==='d';if(sp&&!val('sdt')){alert('กรุณาเลือกวันที่ออกตรวจ');return false}const o={id:s.id||uid(),doctorId:val('sd'),type:val('st'),quota:+val('sq')||0,dow:sp?dt(val('sdt')).getDay():+val('sw')};if(sp)o.date=val('sdt');save('sessions',o)});const sy=()=>{const d=val('sm')==='d';$('#sww').style.display=d?'none':'';$('#sdw').style.display=d?'':'none'};$('#sm').onchange=sy;sy()}
+
+// ---- events ----
+const find=(c,id)=>S[c].find(x=>x.id===id);
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;const id=el.dataset.id,a=el.dataset.act;
+  if(a==='tab'){tab=id}
+  else if(a==='mo'){cur=new Date(cur.getFullYear(),cur.getMonth()+ +id,1)}
+  else if(a==='today'){cur=new Date();cur.setDate(1);sel=ymd(new Date());q={d:'',p:''}}
+  else if(a==='day'){sel=id;q={d:'',p:''}}
+  else if(a==='search'){q={d:val('qd'),p:val('qp')}}
+  else if(a==='clear'){q={d:'',p:''}}
+  else if(a==='new'){if(id)sel=id;apptForm(null);return}
+  else if(a==='edit'){apptForm(find('appts',id));return}
+  else if(a==='move'){apptForm(find('appts',id),true);return}
+  else if(a==='rm'){const x=find('appts',id);ask('ลบนัดหมายของ '+x.name+' ?',()=>del('appts',id));return}
+  else if(a==='cnew'){closureForm();return}else if(a==='cedit'){closureForm(find('closures',id));return}
+  else if(a==='crm'){ask('ยกเลิกรายการนี้?',()=>del('closures',id));return}
+  else if(a==='dnew'){docForm();return}else if(a==='dedit'){docForm(find('doctors',id));return}
+  else if(a==='drm'){ask('ลบแพทย์ท่านนี้ และตารางออกตรวจทั้งหมดของท่าน?',()=>{S.sessions.filter(s=>s.doctorId===id).forEach(s=>del('sessions',s.id));del('doctors',id)});return}
+  else if(a==='snew'){sessForm();return}else if(a==='sedit'){sessForm(find('sessions',id));return}
+  else if(a==='srm'){ask('ลบตารางนี้?',()=>del('sessions',id));return}
+  render();
+});
+
+// ---- Backend: Google Apps Script + Google Sheets ----
+// >>> ใส่ URL ของ Web app (ลงท้ายด้วย /exec) ที่ได้จากการ Deploy <<<
+const GAS_URL='ใส่ URL ของ Apps Script Web app';
+const POLL_MS=15000; // ตรวจว่ามีคนอื่นแก้ข้อมูลทุกกี่มิลลิวินาที (เฉพาะตอนเปิดหน้าจออยู่)
+const GAS={token:null,ver:null,pending:0,started:false,data:{doctors:[],sessions:[],closures:[],appts:[]},subs:{}};
+try{GAS.token=sessionStorage.getItem('gasTok')}catch(e){}
+const gasTok=t=>{GAS.token=t;try{t?sessionStorage.setItem('gasTok',t):sessionStorage.removeItem('gasTok')}catch(e){}};
+async function gcall(body){
+  // ไม่ตั้ง Content-Type เพื่อให้เป็น simple request (ไม่ติด CORS preflight ของ Apps Script)
+  const r=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({...body,token:GAS.token})});
+  const j=await r.json();
+  if(!j.ok){
+    if(j.error==='auth'&&GAS.token){gasTok(null);location.reload()}
+    throw new Error(j.error||'เซิร์ฟเวอร์ผิดพลาด');
+  }
+  return j;
+}
+const gasSnap=c=>({docs:GAS.data[c].map(o=>({id:o.id,data:()=>o}))});
+const gasNotify=c=>(GAS.subs[c]||[]).forEach(x=>x.cb(gasSnap(c)));
+async function gasRefresh(){
+  const j=await gcall({action:'list'});
+  GAS.data=j.data;GAS.ver=j.ver;Object.keys(GAS.data).forEach(gasNotify);
+}
+async function gasStart(){
+  try{await gasRefresh()}
+  catch(e){Object.values(GAS.subs).flat().forEach(x=>x.err&&x.err(e));return}
+  const tick=async()=>{
+    if(document.visibilityState!=='visible'||GAS.pending)return;
+    try{const j=await gcall({action:'ver'});if(j.ver!==GAS.ver&&!GAS.pending)await gasRefresh()}catch(e){}
+  };
+  setInterval(tick,POLL_MS);
+  document.addEventListener('visibilitychange',tick);
+}
+async function gasWrite(c,id,o){
+  const list=GAS.data[c],i=list.findIndex(x=>x.id===id);
+  if(o){const v={...JSON.parse(JSON.stringify(o)),id};i<0?list.push(v):list[i]=v}
+  else if(i>=0)list.splice(i,1);
+  gasNotify(c);           // แสดงผลทันที ไม่ต้องรอเซิร์ฟเวอร์
+  GAS.pending++;let failed=null;
+  try{await gcall(o?{action:'set',col:c,id,data:o}:{action:'del',col:c,id})}
+  catch(e){failed=e}
+  finally{GAS.pending--}
+  if(failed){try{await gasRefresh()}catch(_){}throw failed} // ถ้าบันทึกไม่สำเร็จ ดึงข้อมูลจริงกลับมาแทน
+}
+// ตัวแทนที่มี interface เหมือน Firestore ที่แอปเดิมเรียกใช้
+const gasDb={collection:c=>({
+  doc:id=>({set:o=>gasWrite(c,id,o),delete:()=>gasWrite(c,id,null)}),
+  onSnapshot:(cb,err)=>{(GAS.subs[c]=GAS.subs[c]||[]).push({cb,err});if(!GAS.started){GAS.started=true;setTimeout(gasStart,0)}}
+})};
+function loginUI(){return new Promise(res=>{
+  $('#app').innerHTML=`<div class="card" style="max-width:360px;margin:40px auto"><h2>เข้าสู่ระบบเจ้าหน้าที่</h2><label>อีเมล</label><input id="le" type="email" autocomplete="username" style="width:100%"><label>รหัสผ่าน</label><input id="lp" type="password" autocomplete="current-password" style="width:100%"><p id="lm" style="color:var(--dn);min-height:1.5em"></p><button class="b" id="lb">เข้าสู่ระบบ</button></div>`;
+  const go=async()=>{
+    $('#lm').textContent='';$('#lb').disabled=true;
+    try{const j=await gcall({action:'login',email:$('#le').value.trim(),password:$('#lp').value});gasTok(j.token);res()}
+    catch(e){
+      $('#lm').textContent=e.message==='login'?'อีเมลหรือรหัสผ่านไม่ถูกต้อง':e.message==='locked'?'ใส่รหัสผิดหลายครั้ง กรุณารอ 15 นาที':'เชื่อมต่อไม่สำเร็จ: '+e.message;
+      $('#lb').disabled=false;
+    }
+  };
+  $('#lb').onclick=go;
+  $('#lp').onkeydown=e=>{if(e.key==='Enter')go()};
+})}
+
+// ---- boot ----
+(async()=>{
+  const timer=setTimeout(()=>{if(!ready)$('#app').innerHTML='<p class="mu">ยังเชื่อมต่อฐานข้อมูลไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ตและการเข้าสู่ระบบ</p>'},10000);
+  try{
+    clearTimeout(timer);
+    if(!GAS.token)await loginUI();
+    db=gasDb;
+    const lo=$('#lo');lo.style.display='';lo.onclick=()=>{gasTok(null);location.reload()};
+  }catch(e){db=null}
+  if(!db){clearTimeout(timer);$('#app').innerHTML='<p>เชื่อมต่อไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตและ GAS_URL แล้วรีเฟรชหน้า</p>';return}
+  const names=['doctors','sessions','closures','appts'];let got=0;
+  names.forEach(n=>db.collection(n).onSnapshot(s=>{S[n]=s.docs.map(d=>({...d.data(),id:d.id}));if(!ready&&++got>=names.length){ready=true;clearTimeout(timer)}if(ready&&!document.querySelector('.ov'))render();else if(ready)pending=true},e=>{if(!ready)$('#app').innerHTML='<p>โหลดข้อมูลไม่สำเร็จ: '+esc(e.message||e)+'</p>'}));
+})();
+let pending=false;
+</script>
+</body>
+</html>
