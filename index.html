@@ -223,7 +223,7 @@ document.addEventListener('click',e=>{
 
 // ---- Backend: Google Apps Script + Google Sheets ----
 // >>> ใส่ URL ของ Web app (ลงท้ายด้วย /exec) ที่ได้จากการ Deploy <<<
-const GAS_URL='ใส่ URL ของ Apps Script Web app';
+const GAS_URL='https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRGcCs919zuHhGt9XI3NC864awhkiY9C2PCst2fmzosbloJ99qsq6hjWN3O5cZk_icPsZeXkP5I8AWT2STnQ86SQvLSeRTKM-OsHHsSDDxyqpIajkcitjMxX1aCIiwUvvKMxGzKc8TsPH3KrkUa8Q49TEtw7PwVy6WmJjhMUE6fNFKacng3I638OxWslDF2c7zdwOMqdjIreXQf0Bc5QjX3D5A8_ObINcAphhCiJj1-jN8kpmtva0k1uhn_7R28Sa0D0O0Trht4lNJSSg4wWSzcyRN4pw&lib=MQSGutRat7RwwcGbuEe_q9xHkt4HNAJN7';
 const POLL_MS=15000; // ตรวจว่ามีคนอื่นแก้ข้อมูลทุกกี่มิลลิวินาที (เฉพาะตอนเปิดหน้าจออยู่)
 const GAS={token:null,ver:null,pending:0,started:false,data:{doctors:[],sessions:[],closures:[],appts:[]},subs:{}};
 try{GAS.token=sessionStorage.getItem('gasTok')}catch(e){}
